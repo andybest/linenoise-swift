@@ -2,14 +2,27 @@
 
 A pure Swift implementation of the [Linenoise](http://github.com/antirez/linenoise) library. A minimal, zero-config readline replacement.
 
-## Feature parity with linenoise
+### Supports
 * Line editing with emacs keybindings
 * History handling
 * Completion
 * Hints
 
-## Pure Swift
+### Pure Swift
 Implemented in pure Swift, with a Swifty API, this library is easy to embed in projects using Swift Package Manager, and requires no additional dependencies.
+
+## Contents
+- [API](#api)
+  * [Quick Start](#quick-start)
+  * [Basics](#basics)
+  * [History](#history)
+    + [Adding to History](#adding-to-history)
+    + [Limit the Number of Items in History](#limit-the-number-of-items-in-history)
+    + [Saving the History to a File](#saving-the-history-to-a-file)
+    + [Loading History From a File](#loading-history-from-a-file)
+  * [Completion](#completion)
+  * [Hints](#hints)
+- [Acknowledgements](#acknowledgements)
 
 # API
 
