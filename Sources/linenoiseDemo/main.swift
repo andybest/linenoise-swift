@@ -72,7 +72,8 @@ do {
 
 print("Type 'exit' to quit")
 
-while true {
+var done = false
+while !done {
     do {
         let output = try ln.getLine(prompt: "? ")
         print("\nOutput: \(output)")
@@ -82,6 +83,9 @@ while true {
         if output == "exit" {
             break
         }
+    } catch LinenoiseError.CTRL_C {
+        print("\nCaptured CTRL+C. Quitting.")
+        done = true
     } catch {
         print(error)
     }

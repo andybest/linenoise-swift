@@ -33,4 +33,5 @@ public enum LinenoiseError: Error {
     case notATTY
     case generalError(String)
     case EOF
+    case CTRL_C
 }

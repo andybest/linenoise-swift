@@ -562,6 +562,10 @@ public class LineNoise {
         case ControlCharacters.Ctrl_B.rawValue:
             try moveLeft(editState: editState)
             
+        case ControlCharacters.Ctrl_C.rawValue:
+            // Throw an error so that CTRL+C can be handled by the caller
+            throw LinenoiseError.CTRL_C
+            
         case ControlCharacters.Ctrl_D.rawValue:
             // If there is a character at the right of the cursor, remove it
             // If the cursor is at the end of the line, act as EOF
