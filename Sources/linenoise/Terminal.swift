@@ -45,6 +45,11 @@ internal struct Terminal {
         
         var originalTermios: termios = termios()
         
+        defer {
+            // Disable raw mode
+            _ = tcsetattr(fileHandle, TCSAFLUSH, &originalTermios)
+        }
+        
         if tcgetattr(fileHandle, &originalTermios) == -1 {
             throw LinenoiseError.generalError("Could not get term attributes")
         }
@@ -72,9 +77,6 @@ internal struct Terminal {
         
         // Run the body
         try body()
-        
-        // Disable raw mode
-        _ = tcsetattr(fileHandle, TCSAFLUSH, &originalTermios)
     }
     
     // MARK: - Colors
