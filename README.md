@@ -3,6 +3,7 @@
 A pure Swift implementation of the [Linenoise](http://github.com/antirez/linenoise) library. A minimal, zero-config readline replacement.
 
 ### Supports
+* Mac OS and Linux
 * Line editing with emacs keybindings
 * History handling
 * Completion
