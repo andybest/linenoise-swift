@@ -49,45 +49,98 @@ public class LineNoise {
     
     // MARK: - Public Interface
     
+    /**
+     #init
+     Default initializer, using STDIN for input and STDOUT for output
+     */
     public init() {
         inputFile = STDIN_FILENO
         outputFile = STDOUT_FILENO
     }
     
+    /**
+     #init
+     - parameter inputFile: a POSIX file handle for the input
+     - parameter outputFile: a POSIX file handle for the output
+     */
     public init(inputFile: Int32, outputFile: Int32) {
         self.inputFile = inputFile
         self.outputFile = outputFile
     }
     
+    /**
+     #addHistory
+     Adds a string to the history buffer
+     - parameter item: Item to add
+     */
     public func addHistory(_ item: String) {
         history.add(item)
     }
     
+    /**
+     #setCompletionCallback
+     Adds a callback for tab completion
+     - parameter callback: A callback taking the current text and returning an array of Strings containing possible completions
+     */
     public func setCompletionCallback(_ callback: @escaping (String) -> ([String]) ) {
         completionCallback = callback
     }
     
+    /**
+     #setHintsCallback
+     Adds a callback for hints as you type
+     - parameter callback: A callback taking the current text and optionally returning the hint and a tuple of RGB colours for the hint text
+     */
     public func setHintsCallback(_ callback: @escaping (String) -> (String?, (Int, Int, Int)?)) {
         hintsCallback = callback
     }
     
+    /**
+     #loadHistory
+     Loads history from a file and appends it to the current history buffer
+     - parameter path: The path of the history file
+     - Throws: Can throw an error if the file cannot be found or loaded
+     */
     public func loadHistory(fromFile path: String) throws {
         try history.load(fromFile: path)
     }
     
+    /**
+     #saveHistory
+     Saves history to a file
+     - parameter path: The path of the history file to save
+     - Throws: Can throw an error if the file cannot be written to
+     */
     public func saveHistory(toFile path: String) throws {
         try history.save(toFile: path)
     }
     
+    /*
+     #setHistoryMaxLength
+     Sets the maximum amount of items to keep in history. If this limit is reached, the oldest item is discarded when a new item is added.
+     - parameter historyMaxLength: The maximum length of history. Setting this to 0 (the default) will keep 'unlimited' items in history
+     */
     public func setHistoryMaxLength(_ historyMaxLength: UInt) {
         history.maxLength = historyMaxLength
     }
     
+    /**
+     #clearScreen
+     Clears the screen.
+     - Throws: Can throw an error if the terminal cannot be written to.
+     */
     public func clearScreen() throws {
         try output(text: AnsiCodes.homeCursor)
         try output(text: AnsiCodes.clearScreen)
     }
     
+    /**
+     #getLine
+     The main function of Linenoise. Gets a line of input from the user.
+     - parameter prompt: The prompt to be shown to the user at the beginning of the line.]
+     - Returns: The input from the user
+     - Throws: Can throw an error if the terminal cannot be written to.
+     */
     public func getLine(prompt: String) throws -> String {
         // If there was any temporary history, remove it
         tempBuf = nil
