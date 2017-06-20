@@ -143,7 +143,7 @@ class HistoryTests: XCTestCase {
         let fileContents: String
         
         do {
-            fileContents = try String(contentsOfFile: tempFile)
+            fileContents = try String(contentsOfFile: tempFile, encoding: .utf8)
         } catch {
             XCTFail("Loading file should not throw exception")
             return
