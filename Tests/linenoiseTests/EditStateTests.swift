@@ -159,6 +159,23 @@ class EditStateTests: XCTestCase {
         expect(s.deleteCharacter()).to(beTrue())
         expect(s.currentBuffer).to(equal("ello orld"))
     }
-    
-    
 }
+
+#if os(Linux) || os(FreeBSD)
+    extension EditStateTests {
+        static var allTests: [(String, EditStateTests -> () throws -> Void)] {
+            return [
+                ("testInitEmptyBuffer", testInitEmptyBuffer),
+                ("testInsertCharacter", testInsertCharacter),
+                ("testBackspace", testBackspace),
+                ("testMoveLeft", testMoveLeft),
+                ("testMoveRight", testMoveRight),
+                ("testMoveHome", testMoveHome),
+                ("testMoveEnd", testMoveEnd),
+                ("testRemovePreviousWord", testRemovePreviousWord),
+                ("testDeleteToEndOfLine", testDeleteToEndOfLine),
+                ("testDeleteCharacter", testDeleteCharacter)
+            ]
+        }
+    }
+#endif

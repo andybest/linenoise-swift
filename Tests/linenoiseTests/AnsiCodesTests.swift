@@ -53,3 +53,17 @@ class AnsiCodesTests: XCTestCase {
         expect(AnsiCodes.homeCursor).to(equal("\u{001B}[H"))
     }
 }
+
+#if os(Linux) || os(FreeBSD)
+    extension AnsiCodesTests {
+        static var allTests: [(String, AnsiCodesTests -> () throws -> Void)] {
+            return [
+                ("testGenerateEscapeCode", testGenerateEscapeCode),
+                ("testEraseRight", testEraseRight),
+                ("testCursorForward", testCursorForward),
+                ("testClearScreen", testClearScreen),
+                ("testHomeCursor", testHomeCursor)
+            ]
+        }
+    }
+#endif

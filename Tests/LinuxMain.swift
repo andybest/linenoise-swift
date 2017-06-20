@@ -2,5 +2,7 @@ import XCTest
 @testable import linenoiseTests
 
 XCTMain([
-    testCase(linenoiseTests.allTests),
+    testCase(AnsiCodesTests.allTests),
+    testCase(EditStateTests.allTests),
+    testCase(HistoryTests.allTests),
 ])

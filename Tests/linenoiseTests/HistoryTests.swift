@@ -191,3 +191,23 @@ class HistoryTests: XCTestCase {
     }
     
 }
+
+#if os(Linux) || os(FreeBSD)
+    extension HistoryTests {
+        static var allTests: [(String, HistoryTests -> () throws -> Void)] {
+            return [
+                ("testHistoryAddItem", testHistoryAddItem),
+                ("testHistoryDoesNotAddDuplicatedLines", testHistoryDoesNotAddDuplicatedLines),
+                ("testHistoryHonorsMaxLength", testHistoryHonorsMaxLength),
+                ("testHistoryRemovesEntriesWhenMaxLengthIsSet", testHistoryRemovesEntriesWhenMaxLengthIsSet),
+                ("testHistoryNavigationReturnsNilWhenHistoryEmpty", testHistoryNavigationReturnsNilWhenHistoryEmpty),
+                ("testHistoryNavigationReturnsSingleItemWhenHistoryHasOneItem", testHistoryNavigationReturnsSingleItemWhenHistoryHasOneItem),
+                ("testHistoryStopsAtBeginning", testHistoryStopsAtBeginning),
+                ("testHistoryNavigationStopsAtEnd", testHistoryNavigationStopsAtEnd),
+                ("testHistorySavesToFile", testHistorySavesToFile),
+                ("testHistoryLoadsFromFile", testHistoryLoadsFromFile),
+                ("testHistoryLoadingRespectsMaxLength", testHistoryLoadingRespectsMaxLength)
+            ]
+        }
+    }
+#endif
