@@ -109,7 +109,7 @@ internal class History {
     }
     
     internal func load(fromFile path: String) throws {
-        let input = try String(contentsOfFile: path)
+        let input = try String(contentsOfFile: path, encoding: .utf8)
         
         input.split(separator: "\n").forEach {
             add(String($0))
