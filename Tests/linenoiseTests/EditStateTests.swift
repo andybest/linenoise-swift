@@ -163,7 +163,7 @@ class EditStateTests: XCTestCase {
 
 #if os(Linux) || os(FreeBSD)
     extension EditStateTests {
-        static var allTests: [(String, EditStateTests -> () throws -> Void)] {
+        static var allTests: [(String, (EditStateTests) -> () throws -> Void)] {
             return [
                 ("testInitEmptyBuffer", testInitEmptyBuffer),
                 ("testInsertCharacter", testInsertCharacter),

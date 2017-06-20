@@ -194,7 +194,7 @@ class HistoryTests: XCTestCase {
 
 #if os(Linux) || os(FreeBSD)
     extension HistoryTests {
-        static var allTests: [(String, HistoryTests -> () throws -> Void)] {
+        static var allTests: [(String, (HistoryTests) -> () throws -> Void)] {
             return [
                 ("testHistoryAddItem", testHistoryAddItem),
                 ("testHistoryDoesNotAddDuplicatedLines", testHistoryDoesNotAddDuplicatedLines),

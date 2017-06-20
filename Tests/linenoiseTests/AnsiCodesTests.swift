@@ -56,7 +56,7 @@ class AnsiCodesTests: XCTestCase {
 
 #if os(Linux) || os(FreeBSD)
     extension AnsiCodesTests {
-        static var allTests: [(String, AnsiCodesTests -> () throws -> Void)] {
+        static var allTests: [(String, (AnsiCodesTests) -> () throws -> Void)] {
             return [
                 ("testGenerateEscapeCode", testGenerateEscapeCode),
                 ("testEraseRight", testEraseRight),
