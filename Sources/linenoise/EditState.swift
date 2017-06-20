@@ -115,6 +115,20 @@ internal class EditState {
         return true
     }
     
+    func eraseCharacterRight() -> Bool {
+        if buffer.count == 0 || location >= buffer.endIndex {
+            return false
+        }
+        
+        buffer.remove(at: location)
+        
+        if location > buffer.endIndex {
+            location = buffer.endIndex
+        }
+        
+        return true
+    }
+    
     func deletePreviousWord() -> Bool {
         let oldLocation = location
         

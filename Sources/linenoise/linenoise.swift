@@ -562,6 +562,19 @@ public class LineNoise {
         case ControlCharacters.Ctrl_B.rawValue:
             try moveLeft(editState: editState)
             
+        case ControlCharacters.Ctrl_D.rawValue:
+            // If there is a character at the right of the cursor, remove it
+            // If the cursor is at the end of the line, act as EOF
+            if !editState.eraseCharacterRight() {
+                if editState.currentBuffer.count == 0{
+                    throw LinenoiseError.EOF
+                } else {
+                    try output(character: ControlCharacters.Bell.character)
+                }
+            } else {
+                try refreshLine(editState: editState)
+            }
+            
         case ControlCharacters.Ctrl_P.rawValue:
             // Previous history item
             try moveHistory(editState: editState, direction: .previous)

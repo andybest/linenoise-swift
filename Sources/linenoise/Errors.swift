@@ -32,4 +32,5 @@ import Foundation
 public enum LinenoiseError: Error {
     case notATTY
     case generalError(String)
+    case EOF
 }

@@ -159,6 +159,23 @@ class EditStateTests: XCTestCase {
         expect(s.deleteCharacter()).to(beTrue())
         expect(s.currentBuffer).to(equal("ello orld"))
     }
+    
+    func testEraseCharacterRight() {
+        let s = EditState(prompt: "")
+        s.buffer = "Hello"
+        s.location = s.currentBuffer.endIndex
+        
+        expect(s.eraseCharacterRight()).to(beFalse())
+        
+        s.location = s.currentBuffer.startIndex
+        expect (s.eraseCharacterRight()).to(beTrue())
+        expect(s.currentBuffer).to(equal("ello"))
+        
+        // Test empty buffer
+        s.buffer = ""
+        s.location = s.currentBuffer.startIndex
+        expect(s.eraseCharacterRight()).to(beFalse())
+    }
 }
 
 #if os(Linux) || os(FreeBSD)
@@ -174,7 +191,8 @@ class EditStateTests: XCTestCase {
                 ("testMoveEnd", testMoveEnd),
                 ("testRemovePreviousWord", testRemovePreviousWord),
                 ("testDeleteToEndOfLine", testDeleteToEndOfLine),
-                ("testDeleteCharacter", testDeleteCharacter)
+                ("testDeleteCharacter", testDeleteCharacter),
+                ("testEraseCharacterRight", testEraseCharacterRight)
             ]
         }
     }
