@@ -176,6 +176,29 @@ class EditStateTests: XCTestCase {
         s.location = s.currentBuffer.startIndex
         expect(s.eraseCharacterRight()).to(beFalse())
     }
+    
+    func testSwapCharacters() {
+        let s = EditState(prompt: "")
+        s.buffer = "Hello"
+        s.location = s.currentBuffer.endIndex
+        
+        // Cursor at the end of the text
+        expect(s.swapCharacterWithPrevious()).to(beTrue())
+        expect(s.currentBuffer).to(equal("Helol"))
+        expect(s.location).to(equal(s.currentBuffer.endIndex))
+        
+        // Cursor in the middle of the text
+        s.location = s.currentBuffer.index(before: s.currentBuffer.endIndex)
+        expect(s.swapCharacterWithPrevious()).to(beTrue())
+        expect(s.currentBuffer).to(equal("Hello"))
+        expect(s.location).to(equal(s.currentBuffer.endIndex))
+        
+        // Cursor at the start of the text
+        s.location = s.currentBuffer.startIndex
+        expect(s.swapCharacterWithPrevious()).to(beTrue())
+        expect(s.currentBuffer).to(equal("eHllo"))
+        expect(s.location).to(equal(s.currentBuffer.index(s.currentBuffer.startIndex, offsetBy: 2)))
+    }
 }
 
 #if os(Linux) || os(FreeBSD)

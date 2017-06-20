@@ -160,6 +160,43 @@ internal class EditState {
         return true
     }
     
+    func swapCharacterWithPrevious() -> Bool {
+        // Mimic ZSH behavior
+        
+        if buffer.count < 2 {
+            return false
+        }
+        
+        if location == buffer.endIndex {
+            // Swap the two previous characters if at end index
+            let temp = buffer.remove(at: buffer.index(location, offsetBy: -2))
+            buffer.insert(temp, at: buffer.endIndex)
+            location = buffer.endIndex
+            return true
+        } else if location > buffer.startIndex {
+            // If the characters are in the middle of the string, swap character under cursor with previous,
+            // then move the cursor to the right
+            let temp = buffer.remove(at: buffer.index(before: location))
+            buffer.insert(temp, at: location)
+            
+            if location < buffer.endIndex {
+                location = buffer.index(after: location)
+            }
+            return true
+        } else if location == buffer.startIndex {
+            // If the character is at the start of the string, swap the first two characters, then put the cursor
+            // after them
+            let temp = buffer.remove(at: location)
+            buffer.insert(temp, at: buffer.index(after: location))
+            if location < buffer.endIndex {
+                location = buffer.index(buffer.startIndex, offsetBy: 2)
+            }
+            return true
+        }
+        
+        return false
+    }
+    
     func withTemporaryState(_ body: () throws -> () ) throws {
         let originalBuffer = buffer
         let originalLocation = location

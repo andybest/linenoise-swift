@@ -592,6 +592,13 @@ public class LineNoise {
             try clearScreen()
             try refreshLine(editState: editState)
             
+        case ControlCharacters.Ctrl_T.rawValue:
+            if !editState.swapCharacterWithPrevious() {
+                try output(character: ControlCharacters.Bell.character)
+            } else {
+                try refreshLine(editState: editState)
+            }
+            
         case ControlCharacters.Ctrl_U.rawValue:
             // Delete whole line
             editState.buffer = ""
