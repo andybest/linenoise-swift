@@ -280,7 +280,7 @@ public class LineNoise {
     internal func getNumCols() -> Int {
         var winSize = winsize()
         
-        if ioctl(1, TIOCGWINSZ, &winSize) == -1 || winSize.ws_col == 0 {
+        if ioctl(1, UInt(TIOCGWINSZ), &winSize) == -1 || winSize.ws_col == 0 {
             // Couldn't get number of columns with ioctl
             guard let start = getCursorXPosition(inputFile: inputFile, outputFile: outputFile) else {
                 return 80

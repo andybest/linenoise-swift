@@ -29,7 +29,7 @@
 
 import Foundation
 
-public class History {
+internal class History {
     
     public enum HistoryDirection: Int {
         case previous = -1
@@ -77,7 +77,7 @@ public class History {
     
     // MARK: - History Navigation
     
-    public func navigateHistory(direction: HistoryDirection) -> String? {
+    internal func navigateHistory(direction: HistoryDirection) -> String? {
         if history.count == 0 {
             return nil
         }
@@ -103,12 +103,12 @@ public class History {
     
     // MARK: - Saving and loading
     
-    public func save(toFile path: String) throws {
+    internal func save(toFile path: String) throws {
         let output = history.joined(separator: "\n")
         try output.write(toFile: path, atomically: true, encoding: .utf8)
     }
     
-    public func load(fromFile path: String) throws {
+    internal func load(fromFile path: String) throws {
         let input = try String(contentsOfFile: path)
         
         input.split(separator: "\n").forEach {

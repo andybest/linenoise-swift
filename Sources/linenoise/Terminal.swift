@@ -31,55 +31,62 @@
 import Foundation
 
 internal struct Terminal {
-
+    
     static func isTTY(_ fileHandle: Int32) -> Bool {
         let rv = isatty(fileHandle)
         return rv == 1
     }
-
+    
     // MARK: Raw Mode
     static func withRawMode(_ fileHandle: Int32, body: () throws -> ()) throws {
         if !isTTY(fileHandle) {
             throw LinenoiseError.notATTY
         }
-
+        
         var originalTermios: termios = termios()
-
+        
         if tcgetattr(fileHandle, &originalTermios) == -1 {
             throw LinenoiseError.generalError("Could not get term attributes")
         }
-
+        
         var raw = originalTermios
-
-        raw.c_iflag &= ~UInt(BRKINT | ICRNL | INPCK | ISTRIP | IXON)
-        raw.c_oflag &= ~UInt(OPOST)
-        raw.c_cflag |= UInt(CS8)
-        raw.c_lflag &= ~UInt(ECHO | ICANON | IEXTEN | ISIG)
-
+        
+        #if os(Linux) || os(FreeBSD)
+            raw.c_iflag &= ~UInt32(BRKINT | ICRNL | INPCK | ISTRIP | IXON)
+            raw.c_oflag &= ~UInt32(OPOST)
+            raw.c_cflag |= UInt32(CS8)
+            raw.c_lflag &= ~UInt32(ECHO | ICANON | IEXTEN | ISIG)
+        #else
+            raw.c_iflag &= ~UInt(BRKINT | ICRNL | INPCK | ISTRIP | IXON)
+            raw.c_oflag &= ~UInt(OPOST)
+            raw.c_cflag |= UInt(CS8)
+            raw.c_lflag &= ~UInt(ECHO | ICANON | IEXTEN | ISIG)
+        #endif
+        
         // VMIN = 16
         raw.c_cc.16 = 1
-
-        if tcsetattr(fileHandle, TCSAFLUSH, &raw) < 0 {
+        
+        if tcsetattr(fileHandle, Int32(TCSAFLUSH), &raw) < 0 {
             throw LinenoiseError.generalError("Could not set raw mode")
         }
-
+        
         // Run the body
         try body()
-
+        
         // Disable raw mode
         _ = tcsetattr(fileHandle, TCSAFLUSH, &originalTermios)
     }
-
+    
     // MARK: - Colors
-
+    
     enum ColorSupport {
         case standard
         case twoFiftySix
     }
-
+    
     // Colour tables from https://jonasjacek.github.io/colors/
     // Format: (r, g, b)
-
+    
     static let colors: [(Int, Int, Int)] = [
         // Standard
         (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192),
@@ -124,14 +131,14 @@ internal struct Terminal {
         (158, 158, 158), (168, 168, 168), (178, 178, 178), (188, 188, 188), (198, 198, 198), (208, 208, 208),
         (218, 218, 218), (228, 228, 228), (238, 238, 238)
     ]
-
+    
     static func termColorSupport(termVar: String) -> ColorSupport {
         // A rather dumb way of detecting colour support
-
+        
         if termVar.contains("256") {
             return .twoFiftySix
         }
-
+        
         return .standard
     }
     

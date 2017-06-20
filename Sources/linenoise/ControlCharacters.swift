@@ -29,7 +29,7 @@
 
 import Foundation
 
-public enum ControlCharacters: UInt8 {
+internal enum ControlCharacters: UInt8 {
     case Null       = 0
     case Ctrl_A     = 1
     case Ctrl_B     = 2
