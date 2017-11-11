@@ -107,7 +107,7 @@ internal class EditState {
     }
     
     func deleteCharacter() -> Bool {
-        if location >= currentBuffer.endIndex || currentBuffer.characters.count == 0 {
+        if location >= currentBuffer.endIndex || currentBuffer.isEmpty {
             return false
         }
         
@@ -133,12 +133,12 @@ internal class EditState {
         let oldLocation = location
         
         // Go backwards to find the first non space character
-        while location > buffer.startIndex && buffer.characters[buffer.index(before: location)] == " " {
+        while location > buffer.startIndex && buffer[buffer.index(before: location)] == " " {
             location = buffer.index(before: location)
         }
         
         // Go backwards to find the next space character (start of the word)
-        while location > buffer.startIndex && buffer.characters[buffer.index(before: location)] != " " {
+        while location > buffer.startIndex && buffer[buffer.index(before: location)] != " " {
             location = buffer.index(before: location)
         }
         
@@ -152,11 +152,11 @@ internal class EditState {
     }
     
     func deleteToEndOfLine() -> Bool {
-        if location == buffer.endIndex || buffer.characters.count == 0 {
+        if location == buffer.endIndex || buffer.isEmpty {
             return false
         }
         
-        buffer.removeLast(buffer.characters.count - cursorPosition)
+        buffer.removeLast(buffer.count - cursorPosition)
         return true
     }
     

@@ -439,12 +439,12 @@ public class LineNoise {
                 return ""
             }
             
-            let currentLineLength = editState.prompt.characters.count + editState.currentBuffer.characters.count
+            let currentLineLength = editState.prompt.count + editState.currentBuffer.count
             
             let numCols = getNumCols()
             
             // Don't display the hint if it won't fit.
-            if hint.characters.count + currentLineLength > numCols {
+            if hint.count + currentLineLength > numCols {
                 return ""
             }
             
