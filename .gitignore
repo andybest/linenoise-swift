@@ -1,0 +1,6 @@
+.DS_Store
+xcuserdata/
+
+.build/
+LineNoise.xcodeproj/
+Package.resolved
