@@ -185,6 +185,11 @@ public class LineNoise {
     }
     
     // MARK: - Text output
+
+    private func output(character: ControlCharacters) throws {
+        try output(character: character.character)
+    }
+
     internal func output(character: Character) throws {
         if write(outputFile, String(character), 1) == -1 {
             throw LinenoiseError.generalError("Unable to write to output")
@@ -573,7 +578,7 @@ public class LineNoise {
                 if editState.currentBuffer.count == 0{
                     throw LinenoiseError.EOF
                 } else {
-                    try output(character: ControlCharacters.Bell.character)
+                    try output(character: .Bell)
                 }
             } else {
                 try refreshLine(editState: editState)
@@ -594,7 +599,7 @@ public class LineNoise {
             
         case ControlCharacters.Ctrl_T.rawValue:
             if !editState.swapCharacterWithPrevious() {
-                try output(character: ControlCharacters.Bell.character)
+                try output(character: .Bell)
             } else {
                 try refreshLine(editState: editState)
             }
@@ -608,14 +613,14 @@ public class LineNoise {
         case ControlCharacters.Ctrl_K.rawValue:
             // Delete to the end of the line
             if !editState.deleteToEndOfLine() {
-                try output(character: ControlCharacters.Bell.character)
+                try output(character: .Bell)
             }
             try refreshLine(editState: editState)
             
         case ControlCharacters.Ctrl_W.rawValue:
             // Delete previous word
             if !editState.deletePreviousWord() {
-                try output(character: ControlCharacters.Bell.character)
+                try output(character: .Bell)
             } else {
                 try refreshLine(editState: editState)
             }
@@ -625,7 +630,7 @@ public class LineNoise {
             if editState.backspace() {
                 try refreshLine(editState: editState)
             } else {
-                try output(character: ControlCharacters.Bell.character)
+                try output(character: .Bell)
             }
             
         case ControlCharacters.Esc.rawValue:
