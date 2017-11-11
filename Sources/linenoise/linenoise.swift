@@ -36,36 +36,47 @@ import Foundation
 
 
 public class LineNoise {
+    public enum Mode {
+        case unsupportedTTY
+        case supportedTTY
+        case notATTY
+    }
+
+    public let mode: Mode
+
     var history: History = History()
     
     var completionCallback: ((String) -> ([String]))?
     var hintsCallback: ((String) -> (String?, (Int, Int, Int)?))?
-    
-    var currentTerm: String?
+
+    let currentTerm: String
+
     var tempBuf: String?
     
-    var inputFile: Int32
-    var outputFile: Int32
+    let inputFile: Int32
+    let outputFile: Int32
     
     // MARK: - Public Interface
-    
-    /**
-     #init
-     Default initializer, using STDIN for input and STDOUT for output
-     */
-    public init() {
-        inputFile = STDIN_FILENO
-        outputFile = STDOUT_FILENO
-    }
     
     /**
      #init
      - parameter inputFile: a POSIX file handle for the input
      - parameter outputFile: a POSIX file handle for the output
      */
-    public init(inputFile: Int32, outputFile: Int32) {
+    public init(inputFile: Int32 = STDIN_FILENO, outputFile: Int32 = STDOUT_FILENO) {
         self.inputFile = inputFile
         self.outputFile = outputFile
+
+        currentTerm = ProcessInfo.processInfo.environment["TERM"] ?? ""
+        if !Terminal.isTTY(inputFile) {
+            mode = .notATTY
+        }
+        else if LineNoise.isUnsupportedTerm(currentTerm) {
+            mode = .unsupportedTTY
+        }
+        else {
+            mode = .supportedTTY
+        }
     }
     
     /**
@@ -144,32 +155,25 @@ public class LineNoise {
     public func getLine(prompt: String) throws -> String {
         // If there was any temporary history, remove it
         tempBuf = nil
-        
-        currentTerm = ProcessInfo.processInfo.environment["TERM"]
-        
-        if !Terminal.isTTY(inputFile) {
+
+        switch mode {
+        case .notATTY:
             return getLineNoTTY(prompt: prompt)
-        } else if isUnsupportedTerm() {
+
+        case .unsupportedTTY:
             // If the terminal is unsupported, fall back to Swift's readLine
             print(prompt, terminator: "")
             return readLine() ?? ""
+
+        case .supportedTTY:
+            return try getLineRaw(prompt: prompt)
         }
-        
-        return try getLineRaw(prompt: prompt)
     }
     
     // MARK: - Terminal handling
     
-    internal func isUnsupportedTerm() -> Bool {
-        guard let term = ProcessInfo.processInfo.environment["TERM"] else {
-            return true
-        }
-        
-        if ["dumb", "cons25", "emacs"].contains(term) {
-            return true
-        }
-        
-        return false
+    private static func isUnsupportedTerm(_ term: String) -> Bool {
+        return ["", "dumb", "cons25", "emacs"].contains(term)
     }
     
     // MARK: - Text input
@@ -453,7 +457,7 @@ public class LineNoise {
                 return ""
             }
             
-            let colorSupport = Terminal.termColorSupport(termVar: currentTerm ?? "")
+            let colorSupport = Terminal.termColorSupport(termVar: currentTerm)
             
             var outputColor = 0
             if color == nil {
