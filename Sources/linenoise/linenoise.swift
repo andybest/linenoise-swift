@@ -44,6 +44,13 @@ public class LineNoise {
 
     public let mode: Mode
 
+    /**
+     If false (the default) any edits by the user to a line in the history
+     will be discarded if the user moves forward or back in the history
+     without pressing Enter.  If true, all history edits will be preserved.
+     */
+    public var preserveHistoryEdits = false
+
     var history: History = History()
     
     var completionCallback: ((String) -> ([String]))?
@@ -419,6 +426,9 @@ public class LineNoise {
         // push it into a temporary buffer so it can be retreived later.
         if history.currentIndex == history.historyItems.count {
             tempBuf = editState.currentBuffer
+        }
+        else if preserveHistoryEdits {
+            history.replaceCurrent(editState.currentBuffer)
         }
         
         if let historyItem = history.navigateHistory(direction: direction) {

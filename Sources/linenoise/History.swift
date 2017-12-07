@@ -74,6 +74,10 @@ internal class History {
         // Reset the history pointer to the end index
         index = history.endIndex
     }
+
+    func replaceCurrent(_ item: String) {
+        history[index] = item
+    }
     
     // MARK: - History Navigation
     
