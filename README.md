@@ -21,6 +21,7 @@ Implemented in pure Swift, with a Swifty API, this library is easy to embed in p
     + [Limit the Number of Items in History](#limit-the-number-of-items-in-history)
     + [Saving the History to a File](#saving-the-history-to-a-file)
     + [Loading History From a File](#loading-history-from-a-file)
+    + [History Editing Behavior](#history-editing-behavior)
   * [Completion](#completion)
   * [Hints](#hints)
 - [Acknowledgements](#acknowledgements)
@@ -79,6 +80,12 @@ ln.saveHistory(toFile: "/tmp/history.txt")
 This will add all of the items from the file to the current history
 ```swift
 ln.loadHistory(fromFile: "/tmp/history.txt")
+```
+
+### History Editing Behavior
+By default, any edits by the user to a line in the history will be discarded if the user moves forward or back in the history without pressing Enter.  If you prefer to have all edits preserved, then use the following:
+```swift
+ln.preserveHistoryEdits = true
 ```
 
 ## Completion
