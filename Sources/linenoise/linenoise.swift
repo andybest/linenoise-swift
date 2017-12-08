@@ -161,9 +161,7 @@ public class LineNoise {
             return getLineNoTTY(prompt: prompt)
 
         case .unsupportedTTY:
-            // If the terminal is unsupported, fall back to Swift's readLine
-            print(prompt, terminator: "")
-            return readLine() ?? ""
+            return try getLineUnsupportedTTY(prompt: prompt)
 
         case .supportedTTY:
             return try getLineRaw(prompt: prompt)
@@ -497,7 +495,18 @@ public class LineNoise {
         
         return line
     }
-    
+
+    internal func getLineUnsupportedTTY(prompt: String) throws -> String {
+        // Since the terminal is unsupported, fall back to Swift's readLine.
+        print(prompt, terminator: "")
+        if let line = readLine() {
+            return line
+        }
+        else {
+            throw LinenoiseError.EOF
+        }
+    }
+
     internal func handleEscapeCode(editState: EditState) throws {
         var seq = [0, 0, 0]
         _ = read(inputFile, &seq[0], 1)
