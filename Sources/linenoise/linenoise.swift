@@ -2,19 +2,19 @@
  Copyright (c) 2017, Andy Best <andybest.net at gmail dot com>
  Copyright (c) 2010-2014, Salvatore Sanfilippo <antirez at gmail dot com>
  Copyright (c) 2010-2013, Pieter Noordhuis <pcnoordhuis at gmail dot com>
- 
+
  All rights reserved.
- 
+
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
- 
+
  * Redistributions of source code must retain the above copyright notice,
  this list of conditions and the following disclaimer.
- 
+
  * Redistributions in binary form must reproduce the above copyright notice,
  this list of conditions and the following disclaimer in the documentation
  and/or other materials provided with the distribution.
- 
+
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -52,19 +52,19 @@ public class LineNoise {
     public var preserveHistoryEdits = false
 
     var history: History = History()
-    
+
     var completionCallback: ((String) -> ([String]))?
     var hintsCallback: ((String) -> (String?, (Int, Int, Int)?))?
 
     let currentTerm: String
 
     var tempBuf: String?
-    
+
     let inputFile: Int32
     let outputFile: Int32
-    
+
     // MARK: - Public Interface
-    
+
     /**
      #init
      - parameter inputFile: a POSIX file handle for the input
@@ -85,7 +85,7 @@ public class LineNoise {
             mode = .supportedTTY
         }
     }
-    
+
     /**
      #addHistory
      Adds a string to the history buffer
@@ -94,7 +94,7 @@ public class LineNoise {
     public func addHistory(_ item: String) {
         history.add(item)
     }
-    
+
     /**
      #setCompletionCallback
      Adds a callback for tab completion
@@ -103,7 +103,7 @@ public class LineNoise {
     public func setCompletionCallback(_ callback: @escaping (String) -> ([String]) ) {
         completionCallback = callback
     }
-    
+
     /**
      #setHintsCallback
      Adds a callback for hints as you type
@@ -112,7 +112,7 @@ public class LineNoise {
     public func setHintsCallback(_ callback: @escaping (String) -> (String?, (Int, Int, Int)?)) {
         hintsCallback = callback
     }
-    
+
     /**
      #loadHistory
      Loads history from a file and appends it to the current history buffer
@@ -122,7 +122,7 @@ public class LineNoise {
     public func loadHistory(fromFile path: String) throws {
         try history.load(fromFile: path)
     }
-    
+
     /**
      #saveHistory
      Saves history to a file
@@ -132,7 +132,7 @@ public class LineNoise {
     public func saveHistory(toFile path: String) throws {
         try history.save(toFile: path)
     }
-    
+
     /*
      #setHistoryMaxLength
      Sets the maximum amount of items to keep in history. If this limit is reached, the oldest item is discarded when a new item is added.
@@ -141,7 +141,7 @@ public class LineNoise {
     public func setHistoryMaxLength(_ historyMaxLength: UInt) {
         history.maxLength = historyMaxLength
     }
-    
+
     /**
      #clearScreen
      Clears the screen.
@@ -151,7 +151,7 @@ public class LineNoise {
         try output(text: AnsiCodes.homeCursor)
         try output(text: AnsiCodes.clearScreen)
     }
-    
+
     /**
      #getLine
      The main function of Linenoise. Gets a line of input from the user.
@@ -174,25 +174,25 @@ public class LineNoise {
             return try getLineRaw(prompt: prompt)
         }
     }
-    
+
     // MARK: - Terminal handling
-    
+
     private static func isUnsupportedTerm(_ term: String) -> Bool {
         return ["", "dumb", "cons25", "emacs"].contains(term)
     }
-    
+
     // MARK: - Text input
     internal func readCharacter(inputFile: Int32) -> UInt8? {
         var input: UInt8 = 0
         let count = read(inputFile, &input, 1)
-        
+
         if count == 0 {
             return nil
         }
-        
+
         return input
     }
-    
+
     // MARK: - Text output
 
     private func output(character: ControlCharacters) throws {
@@ -204,18 +204,18 @@ public class LineNoise {
             throw LinenoiseError.generalError("Unable to write to output")
         }
     }
-    
+
     internal func output(text: String) throws {
         if write(outputFile, text, text.count) == -1 {
             throw LinenoiseError.generalError("Unable to write to output")
         }
     }
-    
+
     // MARK: - Cursor movement
     internal func updateCursorPosition(editState: EditState) throws {
         try output(text: "\r" + AnsiCodes.cursorForward(editState.cursorPosition + editState.prompt.count))
     }
-    
+
     internal func moveLeft(editState: EditState) throws {
         // Left
         if editState.moveLeft() {
@@ -224,7 +224,7 @@ public class LineNoise {
             try output(character: ControlCharacters.Bell.character)
         }
     }
-    
+
     internal func moveRight(editState: EditState) throws {
         // Left
         if editState.moveRight() {
@@ -233,7 +233,7 @@ public class LineNoise {
             try output(character: ControlCharacters.Bell.character)
         }
     }
-    
+
     internal func moveHome(editState: EditState) throws {
         if editState.moveHome() {
             try updateCursorPosition(editState: editState)
@@ -241,7 +241,7 @@ public class LineNoise {
             try output(character: ControlCharacters.Bell.character)
         }
     }
-    
+
     internal func moveEnd(editState: EditState) throws {
         if editState.moveEnd() {
             try updateCursorPosition(editState: editState)
@@ -249,16 +249,16 @@ public class LineNoise {
             try output(character: ControlCharacters.Bell.character)
         }
     }
-    
+
     internal func getCursorXPosition(inputFile: Int32, outputFile: Int32) -> Int? {
         do {
             try output(text: AnsiCodes.cursorLocation)
         } catch {
             return nil
         }
-        
+
         var buf = [UInt8]()
-        
+
         var i = 0
         while true {
             if let c = readCharacter(inputFile: inputFile) {
@@ -266,63 +266,63 @@ public class LineNoise {
             } else {
                 return nil
             }
-            
+
             if buf[i] == 82 { // "R"
                 break
             }
-            
+
             i += 1
         }
-        
+
         // Check the first characters are the escape code
         if buf[0] != 0x1B || buf[1] != 0x5B {
             return nil
         }
-        
+
         let positionText = String(bytes: buf[2..<buf.count], encoding: .utf8)
         guard let rowCol = positionText?.split(separator: ";") else {
             return nil
         }
-        
+
         if rowCol.count != 2 {
             return nil
         }
-        
+
         return Int(String(rowCol[1]))
     }
-    
+
     internal func getNumCols() -> Int {
         var winSize = winsize()
-        
+
         if ioctl(1, UInt(TIOCGWINSZ), &winSize) == -1 || winSize.ws_col == 0 {
             // Couldn't get number of columns with ioctl
             guard let start = getCursorXPosition(inputFile: inputFile, outputFile: outputFile) else {
                 return 80
             }
-            
+
             do {
                 try output(text: AnsiCodes.cursorForward(999))
             } catch {
                 return 80
             }
-            
+
             guard let cols = getCursorXPosition(inputFile: inputFile, outputFile: outputFile) else {
                 return 80
             }
-            
+
             // Restore original cursor position
             do {
                 try output(text: "\r" + AnsiCodes.cursorForward(start))
             } catch {
                 // Can't recover from this
             }
-            
+
             return cols
         } else {
             return Int(winSize.ws_col)
         }
     }
-    
+
     // MARK: - Buffer manipulation
     internal func refreshLine(editState: EditState) throws {
         var commandBuf = "\r"                // Return to beginning of the line
@@ -330,24 +330,24 @@ public class LineNoise {
         commandBuf += editState.buffer
         commandBuf += try refreshHints(editState: editState)
         commandBuf += AnsiCodes.eraseRight
-        
+
         // Put the cursor in the original position
         commandBuf += "\r"
         commandBuf += AnsiCodes.cursorForward(editState.cursorPosition + editState.prompt.count)
-        
+
         try output(text: commandBuf)
     }
-    
+
     internal func insertCharacter(_ char: Character, editState: EditState) throws {
         editState.insertCharacter(char)
-        
+
         if editState.location == editState.buffer.endIndex {
             try output(character: char)
         } else {
             try refreshLine(editState: editState)
         }
     }
-    
+
     internal func deleteCharacter(editState: EditState) throws {
         if !editState.deleteCharacter() {
             try output(character: ControlCharacters.Bell.character)
@@ -355,41 +355,41 @@ public class LineNoise {
             try refreshLine(editState: editState)
         }
     }
-    
+
     // MARK: - Completion
-    
+
     internal func completeLine(editState: EditState) throws -> UInt8? {
         if completionCallback == nil {
             return nil
         }
-        
+
         let completions = completionCallback!(editState.currentBuffer)
-        
+
         if completions.count == 0 {
             try output(character: ControlCharacters.Bell.character)
             return nil
         }
-        
+
         var completionIndex = 0
-        
+
         // Loop to handle inputs
         while true {
             if completionIndex < completions.count {
                 try editState.withTemporaryState {
                     editState.buffer = completions[completionIndex]
                     _ = editState.moveEnd()
-                    
+
                     try refreshLine(editState: editState)
                 }
-                
+
             } else {
                 try refreshLine(editState: editState)
             }
-            
+
             guard let char = readCharacter(inputFile: inputFile) else {
                 return nil
             }
-            
+
             switch char {
             case ControlCharacters.Tab.rawValue:
                 // Move to next completion
@@ -397,28 +397,28 @@ public class LineNoise {
                 if completionIndex == completions.count {
                     try output(character: ControlCharacters.Bell.character)
                 }
-                
+
             case ControlCharacters.Esc.rawValue:
                 // Show the original buffer
                 if completionIndex < completions.count {
                     try refreshLine(editState: editState)
                 }
                 return char
-                
+
             default:
                 // Update the buffer and return
                 if completionIndex < completions.count {
                     editState.buffer = completions[completionIndex]
                     _ = editState.moveEnd()
                 }
-                
+
                 return char
             }
         }
     }
-    
+
     // MARK: - History
-    
+
     internal func moveHistory(editState: EditState, direction: History.HistoryDirection) throws {
         // If we're at the end of history (editing the current line),
         // push it into a temporary buffer so it can be retreived later.
@@ -428,7 +428,7 @@ public class LineNoise {
         else if preserveHistoryEdits {
             history.replaceCurrent(editState.currentBuffer)
         }
-        
+
         if let historyItem = history.navigateHistory(direction: direction) {
             editState.buffer = historyItem
             _ = editState.moveEnd()
@@ -443,30 +443,30 @@ public class LineNoise {
             }
         }
     }
-    
+
     // MARK: - Hints
-    
+
     internal func refreshHints(editState: EditState) throws -> String {
         if hintsCallback != nil {
             var cmdBuf = ""
-            
+
             let (hintOpt, color) = hintsCallback!(editState.buffer)
-            
+
             guard let hint = hintOpt else {
                 return ""
             }
-            
+
             let currentLineLength = editState.prompt.count + editState.currentBuffer.count
-            
+
             let numCols = getNumCols()
-            
+
             // Don't display the hint if it won't fit.
             if hint.count + currentLineLength > numCols {
                 return ""
             }
-            
+
             let colorSupport = Terminal.termColorSupport(termVar: currentTerm)
-            
+
             var outputColor = 0
             if color == nil {
                 outputColor = 37
@@ -474,7 +474,7 @@ public class LineNoise {
                 outputColor = Terminal.closestColor(to: color!,
                                                     withColorSupport: colorSupport)
             }
-            
+
             switch colorSupport {
             case .standard:
                 cmdBuf += AnsiCodes.termColor(color: (outputColor & 0xF) + 30, bold: outputColor > 7)
@@ -483,26 +483,26 @@ public class LineNoise {
             }
             cmdBuf += hint
             cmdBuf += AnsiCodes.origTermColor
-            
+
             return cmdBuf
         }
-        
+
         return ""
     }
-    
+
     // MARK: - Line editing
-    
+
     internal func getLineNoTTY(prompt: String) -> String {
         return ""
     }
-    
+
     internal func getLineRaw(prompt: String) throws -> String {
         var line: String = ""
-        
+
         try Terminal.withRawMode(inputFile) {
             line = try editLine(prompt: prompt)
         }
-        
+
         return line
     }
 
@@ -521,15 +521,15 @@ public class LineNoise {
         var seq = [0, 0, 0]
         _ = read(inputFile, &seq[0], 1)
         _ = read(inputFile, &seq[1], 1)
-        
+
         var seqStr = seq.map { Character(UnicodeScalar($0)!) }
-        
+
         if seqStr[0] == "[" {
             if seqStr[1] >= "0" && seqStr[1] <= "9" {
                 // Handle multi-byte sequence ^[[0...
                 _ = read(inputFile, &seq[2], 1)
                 seqStr = seq.map { Character(UnicodeScalar($0)!) }
-                
+
                 if seqStr[2] == "~" {
                     switch seqStr[1] {
                     case "1", "7":
@@ -574,26 +574,26 @@ public class LineNoise {
             }
         }
     }
-    
+
     internal func handleCharacter(_ char: UInt8, editState: EditState) throws -> String? {
         switch char {
-            
+
         case ControlCharacters.Enter.rawValue:
             return editState.currentBuffer
-            
+
         case ControlCharacters.Ctrl_A.rawValue:
             try moveHome(editState: editState)
-            
+
         case ControlCharacters.Ctrl_E.rawValue:
             try moveEnd(editState: editState)
-            
+
         case ControlCharacters.Ctrl_B.rawValue:
             try moveLeft(editState: editState)
-            
+
         case ControlCharacters.Ctrl_C.rawValue:
             // Throw an error so that CTRL+C can be handled by the caller
             throw LinenoiseError.CTRL_C
-            
+
         case ControlCharacters.Ctrl_D.rawValue:
             // If there is a character at the right of the cursor, remove it
             // If the cursor is at the end of the line, act as EOF
@@ -606,40 +606,48 @@ public class LineNoise {
             } else {
                 try refreshLine(editState: editState)
             }
-            
+
+        case ControlCharacters.Ctrl_H.rawValue:
+            // Delete character
+            if editState.backspace() {
+                try refreshLine(editState: editState)
+            } else {
+                try output(character: .Bell)
+            }
+
         case ControlCharacters.Ctrl_P.rawValue:
             // Previous history item
             try moveHistory(editState: editState, direction: .previous)
-            
+
         case ControlCharacters.Ctrl_N.rawValue:
             // Next history item
             try moveHistory(editState: editState, direction: .next)
-            
+
         case ControlCharacters.Ctrl_L.rawValue:
             // Clear screen
             try clearScreen()
             try refreshLine(editState: editState)
-            
+
         case ControlCharacters.Ctrl_T.rawValue:
             if !editState.swapCharacterWithPrevious() {
                 try output(character: .Bell)
             } else {
                 try refreshLine(editState: editState)
             }
-            
+
         case ControlCharacters.Ctrl_U.rawValue:
             // Delete whole line
             editState.buffer = ""
             _ = editState.moveEnd()
             try refreshLine(editState: editState)
-            
+
         case ControlCharacters.Ctrl_K.rawValue:
             // Delete to the end of the line
             if !editState.deleteToEndOfLine() {
                 try output(character: .Bell)
             }
             try refreshLine(editState: editState)
-            
+
         case ControlCharacters.Ctrl_W.rawValue:
             // Delete previous word
             if !editState.deletePreviousWord() {
@@ -647,7 +655,7 @@ public class LineNoise {
             } else {
                 try refreshLine(editState: editState)
             }
-            
+
         case ControlCharacters.Backspace.rawValue:
             // Delete character
             if editState.backspace() {
@@ -655,35 +663,35 @@ public class LineNoise {
             } else {
                 try output(character: .Bell)
             }
-            
+
         case ControlCharacters.Esc.rawValue:
             try handleEscapeCode(editState: editState)
-            
+
         default:
             // Insert character
             try insertCharacter(Character(UnicodeScalar(char)), editState: editState)
             try refreshLine(editState: editState)
         }
-        
+
         return nil
     }
-    
+
     internal func editLine(prompt: String) throws -> String {
         try output(text: prompt)
-        
+
         let editState: EditState = EditState(prompt: prompt)
-        
+
         while true {
             guard var char = readCharacter(inputFile: inputFile) else {
                 return ""
             }
-            
+
             if char == ControlCharacters.Tab.rawValue && completionCallback != nil {
                 if let completionChar = try completeLine(editState: editState) {
                     char = completionChar
                 }
             }
-            
+
             if let rv = try handleCharacter(char, editState: editState) {
                 return rv
             }
