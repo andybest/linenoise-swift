@@ -607,6 +607,9 @@ public class LineNoise {
                 try refreshLine(editState: editState)
             }
 
+        case ControlCharacters.Ctrl_F.rawValue:
+            try moveRight(editState: editState)
+
         case ControlCharacters.Ctrl_H.rawValue:
             // Delete character
             if editState.backspace() {
