@@ -44,6 +44,8 @@ public class LineNoise {
 
     public let mode: Mode
 
+    public var promptDelta = 0
+
     /**
      If false (the default) any edits by the user to a line in the history
      will be discarded if the user moves forward or back in the history
@@ -213,7 +215,7 @@ public class LineNoise {
 
     // MARK: - Cursor movement
     internal func updateCursorPosition(editState: EditState) throws {
-        try output(text: "\r" + AnsiCodes.cursorForward(editState.cursorPosition + editState.prompt.count))
+        try output(text: "\r" + AnsiCodes.cursorForward(editState.cursorPosition + editState.prompt.count - promptDelta))
     }
 
     internal func moveLeft(editState: EditState) throws {
@@ -333,7 +335,7 @@ public class LineNoise {
 
         // Put the cursor in the original position
         commandBuf += "\r"
-        commandBuf += AnsiCodes.cursorForward(editState.cursorPosition + editState.prompt.count)
+        commandBuf += AnsiCodes.cursorForward(editState.cursorPosition + editState.prompt.count - promptDelta)
 
         try output(text: commandBuf)
     }
@@ -456,7 +458,7 @@ public class LineNoise {
                 return ""
             }
 
-            let currentLineLength = editState.prompt.count + editState.currentBuffer.count
+            let currentLineLength = editState.prompt.count - promptDelta + editState.currentBuffer.count
 
             let numCols = getNumCols()
 
