@@ -60,6 +60,8 @@ internal class History {
         // Don't add a duplicate if the last item is equal to this one
         if let lastItem = history.last {
             if lastItem == item {
+                // Reset the history pointer to the end index
+                index = history.endIndex
                 return
             }
         }

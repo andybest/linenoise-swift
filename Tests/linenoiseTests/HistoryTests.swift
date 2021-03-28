@@ -127,6 +127,18 @@ class HistoryTests: XCTestCase {
         expect(h.navigateHistory(direction: .next)).to(beNil())
     }
     
+    func testHistoryNavigationAfterAddingDuplicateLines() {
+        let h = History()
+        h.add("1")
+        h.add("2")
+        
+        expect(h.navigateHistory(direction: .previous)).to(equal("2"))
+        h.add("2")
+        
+        expect(h.navigateHistory(direction: .previous)).to(equal("2"))
+        expect(h.navigateHistory(direction: .previous)).to(equal("1"))
+    }
+    
     // MARK: - Saving and Loading
     
     func testHistorySavesToFile() {
@@ -204,6 +216,7 @@ class HistoryTests: XCTestCase {
                 ("testHistoryNavigationReturnsSingleItemWhenHistoryHasOneItem", testHistoryNavigationReturnsSingleItemWhenHistoryHasOneItem),
                 ("testHistoryStopsAtBeginning", testHistoryStopsAtBeginning),
                 ("testHistoryNavigationStopsAtEnd", testHistoryNavigationStopsAtEnd),
+                ("testHistoryNavigationAfterAddingDuplicateLines", testHistoryNavigationAfterAddingDuplicateLines),
                 ("testHistorySavesToFile", testHistorySavesToFile),
                 ("testHistoryLoadsFromFile", testHistoryLoadsFromFile),
                 ("testHistoryLoadingRespectsMaxLength", testHistoryLoadingRespectsMaxLength)
