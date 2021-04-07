@@ -178,6 +178,11 @@ public class LineNoise {
     // MARK: - Terminal handling
     
     private static func isUnsupportedTerm(_ term: String) -> Bool {
+        #if os(macOS)
+        if let xpcServiceName = ProcessInfo.processInfo.environment["XPC_SERVICE_NAME"], xpcServiceName.localizedCaseInsensitiveContains("com.apple.dt.xcode") {
+            return true
+        }
+        #endif
         return ["", "dumb", "cons25", "emacs"].contains(term)
     }
     
