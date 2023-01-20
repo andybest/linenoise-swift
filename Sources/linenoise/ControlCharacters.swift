@@ -52,6 +52,6 @@ internal enum ControlCharacters: UInt8 {
     case Backspace  = 127
     
     var character: Character {
-        return Character(UnicodeScalar(Int(self.rawValue))!)
+        return Character(UnicodeScalar(self.rawValue))
     }
 }

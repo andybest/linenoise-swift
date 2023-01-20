@@ -35,27 +35,27 @@ class EditStateTests: XCTestCase {
     
     func testInitEmptyBuffer() {
         let s = EditState(prompt: "$ ")
-        expect(s.currentBuffer).to(equal(""))
-        expect(s.location).to(equal(s.currentBuffer.startIndex))
+        expect(s.text).to(equal(""))
+        expect(s.location).to(equal(s.buffer.startIndex))
         expect(s.prompt).to(equal("$ "))
     }
     
     func testInsertCharacter() {
         let s = EditState(prompt: "")
-        s.insertCharacter("A"["A".startIndex])
+        s.insertCharacter("A")
         
-        expect(s.buffer).to(equal("A"))
-        expect(s.location).to(equal(s.currentBuffer.endIndex))
+        expect(s.text).to(equal("A"))
+        expect(s.location).to(equal(s.buffer.endIndex))
         expect(s.cursorPosition).to(equal(1))
     }
     
     func testBackspace() {
         let s = EditState(prompt: "")
-        s.insertCharacter("A"["A".startIndex])
+        s.insertCharacter("A")
         
         expect(s.backspace()).to(beTrue())
-        expect(s.currentBuffer).to(equal(""))
-        expect(s.location).to(equal(s.currentBuffer.startIndex))
+        expect(s.text).to(equal(""))
+        expect(s.location).to(equal(s.buffer.startIndex))
         
         // No more characters left, so backspace should return false
         expect(s.backspace()).to(beFalse())
@@ -63,32 +63,32 @@ class EditStateTests: XCTestCase {
     
     func testMoveLeft() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello"
+        s.location = s.buffer.endIndex
         
         expect(s.moveLeft()).to(beTrue())
         expect(s.cursorPosition).to(equal(4))
         
-        s.location = s.currentBuffer.startIndex
+        s.location = s.buffer.startIndex
         expect(s.moveLeft()).to(beFalse())
     }
     
     func testMoveRight() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello"
-        s.location = s.currentBuffer.startIndex
+        s.text = "Hello"
+        s.location = s.buffer.startIndex
         
         expect(s.moveRight()).to(beTrue())
         expect(s.cursorPosition).to(equal(1))
         
-        s.location = s.currentBuffer.endIndex
+        s.location = s.buffer.endIndex
         expect(s.moveRight()).to(beFalse())
     }
     
     func testMoveHome() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello"
+        s.location = s.buffer.endIndex
         
         expect(s.moveHome()).to(beTrue())
         expect(s.cursorPosition).to(equal(0))
@@ -98,8 +98,8 @@ class EditStateTests: XCTestCase {
     
     func testMoveEnd() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello"
-        s.location = s.currentBuffer.startIndex
+        s.text = "Hello"
+        s.location = s.buffer.startIndex
         
         expect(s.moveEnd()).to(beTrue())
         expect(s.cursorPosition).to(equal(5))
@@ -109,95 +109,95 @@ class EditStateTests: XCTestCase {
     
     func testRemovePreviousWord() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello world"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello world"
+        s.location = s.buffer.endIndex
         
         expect(s.deletePreviousWord()).to(beTrue())
-        expect(s.buffer).to(equal("Hello "))
-        expect(s.location).to(equal("Hello ".endIndex))
+        expect(s.text).to(equal("Hello "))
+        expect(s.location).to(equal(s.buffer.endIndex))
         
-        s.buffer = ""
-        s.location = s.currentBuffer.endIndex
+        s.buffer = []
+        s.location = s.buffer.endIndex
         
         expect(s.deletePreviousWord()).to(beFalse())
         
         // Test with cursor location in the middle of the text
-        s.buffer = "This is a test"
-        s.location = s.currentBuffer.index(s.currentBuffer.startIndex, offsetBy: 8)
+        s.text = "This is a test"
+        s.location = s.buffer.index(s.buffer.startIndex, offsetBy: 8)
         
         expect(s.deletePreviousWord()).to(beTrue())
-        expect(s.buffer).to(equal("This a test"))
+        expect(s.text).to(equal("This a test"))
     }
     
     func testDeleteToEndOfLine() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello world"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello world"
+        s.location = s.buffer.endIndex
         
         expect(s.deleteToEndOfLine()).to(beFalse())
         
-        s.location = s.currentBuffer.index(s.currentBuffer.startIndex, offsetBy: 5)
+        s.location = s.buffer.index(s.buffer.startIndex, offsetBy: 5)
         
         expect(s.deleteToEndOfLine()).to(beTrue())
-        expect(s.currentBuffer).to(equal("Hello"))
+        expect(s.text).to(equal("Hello"))
     }
     
     func testDeleteCharacter() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello world"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello world"
+        s.location = s.buffer.endIndex
         
         expect(s.deleteCharacter()).to(beFalse())
         
-        s.location = s.currentBuffer.startIndex
+        s.location = s.buffer.startIndex
         
         expect(s.deleteCharacter()).to(beTrue())
-        expect(s.currentBuffer).to(equal("ello world"))
+        expect(s.text).to(equal("ello world"))
         
-        s.location = s.currentBuffer.index(s.currentBuffer.startIndex, offsetBy: 5)
+        s.location = s.buffer.index(s.buffer.startIndex, offsetBy: 5)
         
         expect(s.deleteCharacter()).to(beTrue())
-        expect(s.currentBuffer).to(equal("ello orld"))
+        expect(s.text).to(equal("ello orld"))
     }
     
     func testEraseCharacterRight() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello"
+        s.location = s.buffer.endIndex
         
         expect(s.eraseCharacterRight()).to(beFalse())
         
-        s.location = s.currentBuffer.startIndex
+        s.location = s.buffer.startIndex
         expect (s.eraseCharacterRight()).to(beTrue())
-        expect(s.currentBuffer).to(equal("ello"))
+        expect(s.text).to(equal("ello"))
         
         // Test empty buffer
-        s.buffer = ""
-        s.location = s.currentBuffer.startIndex
+        s.buffer = []
+        s.location = s.buffer.startIndex
         expect(s.eraseCharacterRight()).to(beFalse())
     }
     
     func testSwapCharacters() {
         let s = EditState(prompt: "")
-        s.buffer = "Hello"
-        s.location = s.currentBuffer.endIndex
+        s.text = "Hello"
+        s.location = s.buffer.endIndex
         
         // Cursor at the end of the text
         expect(s.swapCharacterWithPrevious()).to(beTrue())
-        expect(s.currentBuffer).to(equal("Helol"))
-        expect(s.location).to(equal(s.currentBuffer.endIndex))
+        expect(s.text).to(equal("Helol"))
+        expect(s.location).to(equal(s.buffer.endIndex))
         
         // Cursor in the middle of the text
-        s.location = s.currentBuffer.index(before: s.currentBuffer.endIndex)
+        s.location = s.buffer.index(before: s.buffer.endIndex)
         expect(s.swapCharacterWithPrevious()).to(beTrue())
-        expect(s.currentBuffer).to(equal("Hello"))
-        expect(s.location).to(equal(s.currentBuffer.endIndex))
+        expect(s.text).to(equal("Hello"))
+        expect(s.location).to(equal(s.buffer.endIndex))
         
         // Cursor at the start of the text
-        s.location = s.currentBuffer.startIndex
+        s.location = s.buffer.startIndex
         expect(s.swapCharacterWithPrevious()).to(beTrue())
-        expect(s.currentBuffer).to(equal("eHllo"))
-        expect(s.location).to(equal(s.currentBuffer.index(s.currentBuffer.startIndex, offsetBy: 2)))
+        expect(s.text).to(equal("eHllo"))
+        expect(s.location).to(equal(s.buffer.index(s.buffer.startIndex, offsetBy: 2)))
     }
 }
 
