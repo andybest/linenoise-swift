@@ -34,6 +34,23 @@
 #endif
 import Foundation
 
+extension StringProtocol {
+    var characters: [Character] {
+        self.map { $0 }
+    }
+}
+
+extension ArraySlice<Character> {
+    var string: String {
+        self.reduce("") { $0 + String($1) }
+    }
+}
+
+extension Array<Character> {
+    var string: String {
+        self.reduce("") { $0 + String($1) }
+    }
+}
 
 public class LineNoise {
     public enum Mode {
