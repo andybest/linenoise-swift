@@ -204,15 +204,30 @@ public class LineNoise {
     }
     
     // MARK: - Text input
-    internal func readCharacter(inputFile: Int32) -> UInt8? {
-        var input: UInt8 = 0
-        let count = read(inputFile, &input, 1)
-        
-        if count == 0 {
-            return nil
+    internal func readCharacter(inputFile: Int32) -> Character? {
+        var data = Data()
+        var expectedCharacters = 1
+        while expectedCharacters > 0 {
+            var input: UInt8 = 0
+            let count = read(inputFile, &input, 1)
+            
+            if count == 0 {
+                return nil
+            }
+            
+            if data.isEmpty {
+                if input < 128 {
+                    return Character(UnicodeScalar(input))
+                }
+                // the first byte of a utf-8 sequence has a leading bit count that specifies
+                // the total number of bytes in the sequence.
+                expectedCharacters = (~input).leadingZeroBitCount
+            }
+
+            data.append(input)
+            expectedCharacters -= 1
         }
-        
-        return input
+        return String(data: data, encoding: .utf8).flatMap(Character.init)
     }
     
     // MARK: - Text output
@@ -222,13 +237,15 @@ public class LineNoise {
     }
 
     internal func output(character: Character) throws {
-        if write(outputFile, String(character), 1) == -1 {
+        let bytes: [UInt8] = character.utf8.map { $0 }
+        if write(outputFile, bytes, bytes.count) == -1 {
             throw LinenoiseError.generalError("Unable to write to output")
         }
     }
     
     internal func output(text: String) throws {
-        if write(outputFile, text, text.count) == -1 {
+        let bytes = text.utf8.map { $0 }
+        if write(outputFile, bytes, bytes.count) == -1 {
             throw LinenoiseError.generalError("Unable to write to output")
         }
     }
@@ -279,7 +296,7 @@ public class LineNoise {
             return nil
         }
         
-        var buf = [UInt8]()
+        var buf: [Character] = []
         
         var i = 0
         while true {
@@ -289,7 +306,7 @@ public class LineNoise {
                 return nil
             }
             
-            if buf[i] == 82 { // "R"
+            if buf[i] == "R" { // "R"
                 break
             }
             
@@ -297,14 +314,12 @@ public class LineNoise {
         }
         
         // Check the first characters are the escape code
-        if buf[0] != 0x1B || buf[1] != 0x5B {
+        if buf[0] != Character(UnicodeScalar(0x1B)) || buf[1] != Character(UnicodeScalar(0x5B)) {
             return nil
         }
         
-        let positionText = String(bytes: buf[2..<buf.count], encoding: .utf8)
-        guard let rowCol = positionText?.split(separator: ";") else {
-            return nil
-        }
+        let positionText = buf[2..<buf.count].string
+        let rowCol = positionText.split(separator: ";")
         
         if rowCol.count != 2 {
             return nil
@@ -349,7 +364,7 @@ public class LineNoise {
     internal func refreshLine(editState: EditState) throws {
         var commandBuf = "\r"                // Return to beginning of the line
         commandBuf += editState.prompt
-        commandBuf += editState.buffer
+        commandBuf += editState.text
         commandBuf += try refreshHints(editState: editState)
         commandBuf += AnsiCodes.eraseRight
         
@@ -380,12 +395,12 @@ public class LineNoise {
     
     // MARK: - Completion
     
-    internal func completeLine(editState: EditState) throws -> UInt8? {
+    internal func completeLine(editState: EditState) throws -> Character? {
         if completionCallback == nil {
             return nil
         }
         
-        let completions = completionCallback!(editState.currentBuffer)
+        let completions = completionCallback!(editState.text)
         
         if completions.count == 0 {
             try output(character: ControlCharacters.Bell.character)
@@ -398,7 +413,7 @@ public class LineNoise {
         while true {
             if completionIndex < completions.count {
                 try editState.withTemporaryState {
-                    editState.buffer = completions[completionIndex]
+                    editState.text = completions[completionIndex]
                     _ = editState.moveEnd()
                     
                     try refreshLine(editState: editState)
@@ -412,7 +427,7 @@ public class LineNoise {
                 return nil
             }
             
-            switch char {
+            switch char.asciiValue {
             case ControlCharacters.Tab.rawValue:
                 // Move to next completion
                 completionIndex = (completionIndex + 1) % (completions.count + 1)
@@ -430,7 +445,7 @@ public class LineNoise {
             default:
                 // Update the buffer and return
                 if completionIndex < completions.count {
-                    editState.buffer = completions[completionIndex]
+                    editState.text = completions[completionIndex]
                     _ = editState.moveEnd()
                 }
                 
@@ -445,19 +460,19 @@ public class LineNoise {
         // If we're at the end of history (editing the current line),
         // push it into a temporary buffer so it can be retreived later.
         if history.currentIndex == history.historyItems.count {
-            tempBuf = editState.currentBuffer
+            tempBuf = editState.text
         }
         else if preserveHistoryEdits {
-            history.replaceCurrent(editState.currentBuffer)
+            history.replaceCurrent(editState.text)
         }
         
         if let historyItem = history.navigateHistory(direction: direction) {
-            editState.buffer = historyItem
+            editState.text = historyItem
             _ = editState.moveEnd()
             try refreshLine(editState: editState)
         } else {
             if case .next = direction {
-                editState.buffer = tempBuf ?? ""
+                editState.buffer = tempBuf?.characters ?? []
                 _ = editState.moveEnd()
                 try refreshLine(editState: editState)
             } else {
@@ -472,13 +487,14 @@ public class LineNoise {
         if hintsCallback != nil {
             var cmdBuf = ""
             
-            let (hintOpt, color) = hintsCallback!(editState.buffer)
+            let (hintOpt, color) = hintsCallback!(editState.text)
             
             guard let hint = hintOpt else {
                 return ""
             }
             
-            let currentLineLength = editState.prompt.count + editState.currentBuffer.count
+            // FIXME:  non-ASCII characters may throw this off.
+            let currentLineLength = editState.prompt.count + editState.text.count
             
             let numCols = getNumCols()
             
@@ -597,11 +613,11 @@ public class LineNoise {
         }
     }
     
-    internal func handleCharacter(_ char: UInt8, editState: EditState) throws -> String? {
-        switch char {
+    internal func handleCharacter(_ char: Character, editState: EditState) throws -> String? {
+        switch char.asciiValue {
             
         case ControlCharacters.Enter.rawValue:
-            return editState.currentBuffer
+            return editState.text
             
         case ControlCharacters.Ctrl_A.rawValue:
             try moveHome(editState: editState)
@@ -620,7 +636,7 @@ public class LineNoise {
             // If there is a character at the right of the cursor, remove it
             // If the cursor is at the end of the line, act as EOF
             if !editState.eraseCharacterRight() {
-                if editState.currentBuffer.count == 0{
+                if editState.buffer.count == 0{
                     throw LinenoiseError.EOF
                 } else {
                     try output(character: .Bell)
@@ -651,7 +667,7 @@ public class LineNoise {
             
         case ControlCharacters.Ctrl_U.rawValue:
             // Delete whole line
-            editState.buffer = ""
+            editState.buffer = []
             _ = editState.moveEnd()
             try refreshLine(editState: editState)
             
@@ -683,7 +699,7 @@ public class LineNoise {
             
         default:
             // Insert character
-            try insertCharacter(Character(UnicodeScalar(char)), editState: editState)
+            try insertCharacter(char, editState: editState)
             try refreshLine(editState: editState)
         }
         
@@ -700,7 +716,7 @@ public class LineNoise {
                 return ""
             }
             
-            if char == ControlCharacters.Tab.rawValue && completionCallback != nil {
+            if char.asciiValue == ControlCharacters.Tab.rawValue && completionCallback != nil {
                 if let completionChar = try completeLine(editState: editState) {
                     char = completionChar
                 }

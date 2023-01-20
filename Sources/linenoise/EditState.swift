@@ -30,12 +30,13 @@
 import Foundation
 
 internal class EditState {
-    var buffer: String = ""
-    var location: String.Index
+    var buffer: [Character] = []
+    var location: Int
     let prompt: String
     
-    public var currentBuffer: String {
-        return buffer
+    public var text: String {
+        get { buffer.string }
+        set { buffer = newValue.characters }
     }
     
     init(prompt: String) {
@@ -44,7 +45,10 @@ internal class EditState {
     }
     
     var cursorPosition: Int {
-        return buffer.distance(from: buffer.startIndex, to: location)
+        // terminal seems to treat non-ASCII characters as if they take two positions.
+        buffer[buffer.startIndex..<location].reduce(0) {
+            $0 + ($1.isASCII ? 1 : 2)
+        }
     }
     
     func insertCharacter(_ char: Character) {
@@ -107,7 +111,7 @@ internal class EditState {
     }
     
     func deleteCharacter() -> Bool {
-        if location >= currentBuffer.endIndex || currentBuffer.isEmpty {
+        if location >= buffer.endIndex || buffer.isEmpty {
             return false
         }
         
